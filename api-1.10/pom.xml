@@ -7,10 +7,10 @@
 		<version>2.3-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>htmlformentry-omod</artifactId>
+	<artifactId>htmlformentry-api-1.10</artifactId>
 	<packaging>jar</packaging>
-	<name>HTML Form Entry OMOD</name>
-	<description>OpenMRS module project for HTML Form Entry</description>
+	<name>HTML Form Entry API 1.10</name>
+	<description>API project for HTML Form Entry</description>
 
 	<dependencies>
 		<dependency>
@@ -20,8 +20,9 @@
 		</dependency>
 		<dependency>
 			<groupId>org.openmrs.module</groupId>
-			<artifactId>htmlformentry-api-1.10</artifactId>
+			<artifactId>htmlformentry-api</artifactId>
 			<version>${project.parent.version}</version>
+			<classifier>tests</classifier>
 		</dependency>
 
 		<dependency>
@@ -32,6 +33,47 @@
 			<groupId>org.openmrs.web</groupId>
 			<artifactId>openmrs-web</artifactId>
 		</dependency>
+
+		<!-- jars we need to provide for compile but that will be provided at runtime 
+			(scope=provided) -->
+		<dependency>
+			<groupId>org.openmrs.module</groupId>
+			<artifactId>logic</artifactId>
+		</dependency>
+
+		<!-- jars required only to run test scripts (scope=test) -->
+		<dependency>
+			<groupId>org.codehaus.groovy</groupId>
+			<artifactId>groovy</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>cglib</groupId>
+			<artifactId>cglib</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>xalan</groupId>
+			<artifactId>xalan</artifactId>
+		</dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-junit4</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.joda</groupId>
+            <artifactId>joda-convert</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
@@ -43,27 +85,10 @@
 	</dependencies>
 
 	<build>
-		<finalName>${project.parent.artifactId}-${project.parent.version}</finalName>
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
 				<filtering>true</filtering>
-			</resource>
-			<resource>
-				<directory>src/main/webapp</directory>
-				<filtering>true</filtering>
-				<excludes>
-					<exclude>resources</exclude>
-				</excludes>
-				<targetPath>web/module</targetPath>
-			</resource>
-			<resource>
-				<directory>src/main/webapp</directory>
-				<filtering>false</filtering>
-				<includes>
-					<include>resources</include>
-				</includes>
-				<targetPath>web/module</targetPath>
 			</resource>
 		</resources>
 		<testResources>
@@ -86,50 +111,6 @@
 				</excludes>
 			</testResource>
 		</testResources>
-
-		<plugins>
-			<plugin>
-				<groupId>org.openmrs.maven.plugins</groupId>
-				<artifactId>maven-openmrs-plugin</artifactId>
-				<extensions>true</extensions>
-				<executions>
-					<execution>
-						<id>init</id>
-						<phase>initialize</phase>
-						<goals>
-							<goal>initialize-module</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>pack</id>
-						<phase>package</phase>
-						<goals>
-							<goal>package-module</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>Expand moduleApplicationContext and messages</id>
-						<goals>
-							<goal>unpack-dependencies</goal>
-						</goals>
-						<phase>generate-resources</phase>
-						<configuration>
-							<includeGroupIds>${project.parent.groupId}</includeGroupIds>
-							<includeArtifactIds>${project.parent.artifactId}-api</includeArtifactIds>
-							<excludeTransitive>true</excludeTransitive>
-							<includes>**/*</includes>
-							<outputDirectory>${project.build.directory}/classes</outputDirectory>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
 	</build>
 
 	<properties>
@@ -137,38 +118,12 @@
 		<MODULE_NAME>${project.parent.name}</MODULE_NAME>
 		<MODULE_VERSION>${project.parent.version}</MODULE_VERSION>
 		<MODULE_PACKAGE>${project.parent.groupId}.${project.parent.artifactId}</MODULE_PACKAGE>
+		<openMRSVersion>1.10.0-SNAPSHOT</openMRSVersion>
 	</properties>
 
 	<!-- different profiles for building/testing against different version of 
 		openmrs -->
 	<profiles>
-		<profile>
-			<id>deploy-web</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-antrun-plugin</artifactId>
-						<executions>
-							<execution>
-								<phase>package</phase>
-								<goals>
-									<goal>run</goal>
-								</goals>
-								<configuration>
-									<tasks>
-										<copy todir="${deploy.path}/WEB-INF/view/module/${project.parent.artifactId}">
-											<fileset dir="src/main/webapp" includes="**/*" />
-										</copy>
-									</tasks>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-
 		<profile>
 			<id>openmrs-1.6</id>
 			<dependencies>
@@ -176,7 +131,6 @@
 					<groupId>org.openmrs.test</groupId>
 					<artifactId>openmrs-test</artifactId>
 					<type>jar</type>
-					<scope>test</scope>
 				</dependency>
 			</dependencies>
 		</profile>
@@ -188,7 +142,6 @@
 					<groupId>org.openmrs.test</groupId>
 					<artifactId>openmrs-test</artifactId>
 					<type>jar</type>
-					<scope>test</scope>
 				</dependency>
 			</dependencies>
 		</profile>
@@ -199,11 +152,6 @@
 				<dependency>
 					<groupId>org.openmrs.api</groupId>
 					<artifactId>openmrs-api</artifactId>
-					<type>test-jar</type>
-				</dependency>
-				<dependency>
-					<groupId>org.openmrs.web</groupId>
-					<artifactId>openmrs-web</artifactId>
 					<type>test-jar</type>
 				</dependency>
 				<dependency>
@@ -223,11 +171,6 @@
 					<type>test-jar</type>
 				</dependency>
 				<dependency>
-					<groupId>org.openmrs.web</groupId>
-					<artifactId>openmrs-web</artifactId>
-					<type>test-jar</type>
-				</dependency>
-				<dependency>
 					<groupId>org.openmrs.test</groupId>
 					<artifactId>openmrs-test</artifactId>
 					<type>pom</type>
@@ -241,11 +184,6 @@
 				<dependency>
 					<groupId>org.openmrs.api</groupId>
 					<artifactId>openmrs-api</artifactId>
-					<type>test-jar</type>
-				</dependency>
-				<dependency>
-					<groupId>org.openmrs.web</groupId>
-					<artifactId>openmrs-web</artifactId>
 					<type>test-jar</type>
 				</dependency>
 				<dependency>
